@@ -18,34 +18,59 @@ client = OpenAI(api_key=os.getenv('OPENAI_API_KEY', 'sk-test-key'))
 
 def analyze_image_with_gpt4_vision(image_data):
     """
-    Analyse une image avec GPT-4 Vision pour détecter un commerce/lieu
+    Analyse une image avec GPT-4 Vision pour détecter un commerce/lieu pour R8it
     """
     try:
-        # Préparer le prompt pour l'analyse
+        # Préparer le prompt spécialisé pour R8it
         prompt = """
-        Analysez cette image et identifiez le commerce, lieu ou service visible.
+        Tu es un assistant IA spécialisé dans l'analyse d'expériences pour l'application R8it.
         
-        Répondez UNIQUEMENT avec un objet JSON valide contenant :
+        R8it permet aux utilisateurs de noter et commenter leurs expériences en prenant simplement une photo.
+        
+        Analyse cette image et identifie PRÉCISÉMENT ce que tu vois :
+        
+        TYPES D'EXPÉRIENCES À DÉTECTER :
+        🍽️ RESTAURANTS/CAFÉS : Plats, menus, devantures, intérieurs de restaurants
+        🎬 CINÉMAS/SPECTACLES : Affiches de films, salles de cinéma, théâtres, événements
+        🏛️ LIEUX TOURISTIQUES : Monuments, musées, sites historiques, attractions
+        🏪 COMMERCES : Magasins, boutiques, enseignes, produits
+        🏢 SERVICES : Administrations, banques, services publics
+        ⚠️ ARNAQUES : SMS frauduleux, emails suspects, faux sites web
+        🏠 PRODUITS : Articles achetés, emballages, étiquettes de marques
+        
+        INSTRUCTIONS SPÉCIFIQUES :
+        - Lis TOUS les textes visibles (enseignes, menus, étiquettes, noms de marques)
+        - Identifie le lieu/produit/service EXACT si possible
+        - Pour les restaurants : mentionne le nom exact, le type de cuisine
+        - Pour les produits : mentionne la marque et le type de produit
+        - Pour les lieux : donne le nom précis si visible
+        - Pour les arnaques : détecte les signes suspects (fautes, urgence, liens douteux)
+        
+        Réponds UNIQUEMENT avec un objet JSON valide :
         {
-            "businessName": "Nom du commerce/lieu détecté",
-            "businessType": "Type (Restaurant, Café, Magasin, Cinéma, etc.)",
-            "address": "Adresse estimée ou zone géographique",
-            "category": "Catégorie détaillée",
-            "icon": "Emoji représentatif",
+            "businessName": "NOM EXACT du lieu/produit/service détecté",
+            "businessType": "Type précis (Restaurant Italien, Cinéma, Huile d'olive, etc.)",
+            "address": "Adresse/localisation si visible, sinon 'Localisation détectée'",
+            "category": "Catégorie détaillée basée sur ce que tu vois",
+            "icon": "Emoji le plus approprié",
             "suggestedRating": 4,
-            "suggestedReview": "Avis suggéré basé sur ce que vous voyez",
-            "quickSuggestions": ["suggestion1", "suggestion2", "suggestion3", "suggestion4"],
-            "confidence": 0.85
+            "suggestedReview": "Avis naturel basé sur l'apparence/contexte de l'image",
+            "quickSuggestions": ["mot-clé1", "mot-clé2", "mot-clé3", "mot-clé4"],
+            "confidence": 0.95
         }
         
-        Instructions spéciales :
-        - Si c'est un SMS/message d'arnaque : businessName="Arnaque détectée", icon="⚠️", suggestedRating=1
-        - Si c'est un restaurant : icon="🍽️" ou "⭐" pour les restaurants étoilés
-        - Si c'est un cinéma/événement : icon="🎬"
-        - Si c'est du tourisme : icon="🏛️" ou "🚣" ou "🗼"
-        - Les suggestions doivent être courtes (2-3 mots max)
+        EXEMPLES DE BONNES RÉPONSES :
+        - Huile d'olive Terra Delyssa → "Terra Delyssa", "Huile d'olive bio", "🫒"
+        - Restaurant avec enseigne → "Le Petit Bistrot", "Restaurant français", "🍽️"
+        - Affiche de cinéma → "Cinéma Grand Rex", "Salle de cinéma", "🎬"
+        - SMS suspect → "Arnaque SMS détectée", "Tentative de fraude", "⚠️"
+        
+        RÈGLES IMPORTANTES :
+        - Si tu vois du texte, utilise-le pour identifier précisément
+        - Les suggestions doivent être des mots-clés courts et pertinents
         - L'avis doit être naturel et contextuel
-        - La note doit être entre 1 et 5
+        - La note doit refléter l'apparence/qualité visible (1-5)
+        - Pour les arnaques : note=1, avis d'alerte
         """
         
         response = client.chat.completions.create(
@@ -64,8 +89,8 @@ def analyze_image_with_gpt4_vision(image_data):
                     ]
                 }
             ],
-            max_tokens=500,
-            temperature=0.3
+            max_tokens=600,
+            temperature=0.2  # Réduire la température pour plus de précision
         )
         
         # Extraire la réponse JSON
@@ -80,31 +105,31 @@ def analyze_image_with_gpt4_vision(image_data):
         # Parser le JSON
         result = json.loads(response_text)
         
-        # Validation et valeurs par défaut
-        result.setdefault('businessName', 'Commerce détecté')
-        result.setdefault('businessType', 'Commerce')
-        result.setdefault('address', 'Adresse détectée par IA')
-        result.setdefault('category', 'Commerce/Service')
-        result.setdefault('icon', '🏪')
+        # Validation et valeurs par défaut améliorées
+        result.setdefault('businessName', 'Lieu détecté')
+        result.setdefault('businessType', 'Expérience')
+        result.setdefault('address', 'Localisation détectée')
+        result.setdefault('category', 'Expérience/Service')
+        result.setdefault('icon', '📍')
         result.setdefault('suggestedRating', 4)
-        result.setdefault('suggestedReview', 'Expérience analysée par IA')
-        result.setdefault('quickSuggestions', ['expérience unique', 'recommandé', 'service correct', 'à découvrir'])
+        result.setdefault('suggestedReview', 'Expérience intéressante détectée par R8it.')
+        result.setdefault('quickSuggestions', ['intéressant', 'à tester', 'sympa', 'recommandé'])
         result.setdefault('confidence', 0.8)
         
         return result
         
     except Exception as e:
         print(f"Erreur GPT-4 Vision: {e}")
-        # Fallback en cas d'erreur
+        # Fallback amélioré en cas d'erreur
         return {
-            "businessName": "Commerce détecté",
-            "businessType": "Commerce",
-            "address": "Lieu analysé par IA",
-            "category": "Commerce/Service",
-            "icon": "🏪",
+            "businessName": "Lieu détecté",
+            "businessType": "Expérience",
+            "address": "Localisation analysée par IA",
+            "category": "Expérience/Service",
+            "icon": "📍",
             "suggestedRating": 4,
-            "suggestedReview": "Lieu intéressant détecté par notre IA. N'hésitez pas à partager votre expérience !",
-            "quickSuggestions": ["expérience unique", "recommandé", "service correct", "à découvrir"],
+            "suggestedReview": "Lieu intéressant détecté par R8it. Partagez votre expérience !",
+            "quickSuggestions": ["expérience unique", "à découvrir", "intéressant", "recommandé"],
             "confidence": 0.5,
             "error": str(e)
         }
