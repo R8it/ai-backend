@@ -54,8 +54,9 @@ def analyze_image_with_gpt4_vision(image_data):
             "category": "Catégorie détaillée basée sur ce que tu vois",
             "icon": "Emoji le plus approprié",
             "suggestedRating": 4,
-            "suggestedReview": "Avis naturel basé sur l'apparence/contexte de l'image",
-            "quickSuggestions": ["mot-clé1", "mot-clé2", "mot-clé3", "mot-clé4"],
+            "suggestedReview": "",
+            "positiveSuggestions": ["suggestion positive 1", "suggestion positive 2"],
+            "negativeSuggestions": ["suggestion négative 1", "suggestion négative 2"],
             "confidence": 0.95
         }
         
@@ -67,10 +68,13 @@ def analyze_image_with_gpt4_vision(image_data):
         
         RÈGLES IMPORTANTES :
         - Si tu vois du texte, utilise-le pour identifier précisément
-        - Les suggestions doivent être des mots-clés courts et pertinents
-        - L'avis doit être naturel et contextuel
-        - La note doit refléter l'apparence/qualité visible (1-5)
-        - Pour les arnaques : note=1, avis d'alerte
+        - Les suggestions positives et négatives doivent être des mots-clés courts et pertinents.
+        - Le champ suggestedReview doit être vide par défaut.
+        - La note doit refléter l'apparence/qualité visible (1-5).
+        - Pour les arnaques : note=1, avis d'alerte.
+        - Si l'image est positive (ex: plat étoilé), priorise les suggestions positives.
+        - Si l'image est négative (ex: colis endommagé), priorise les suggestions négatives.
+        - Si l'image est neutre, propose un équilibre de suggestions positives et négatives.
         """
         
         response = client.chat.completions.create(
@@ -112,8 +116,9 @@ def analyze_image_with_gpt4_vision(image_data):
         result.setdefault('category', 'Expérience/Service')
         result.setdefault('icon', '📍')
         result.setdefault('suggestedRating', 4)
-        result.setdefault('suggestedReview', 'Expérience intéressante détectée par R8it.')
-        result.setdefault('quickSuggestions', ['intéressant', 'à tester', 'sympa', 'recommandé'])
+        result.setdefault('suggestedReview', '') # Champ vide par défaut
+        result.setdefault('positiveSuggestions', [])
+        result.setdefault('negativeSuggestions', [])
         result.setdefault('confidence', 0.8)
         
         return result
@@ -128,8 +133,9 @@ def analyze_image_with_gpt4_vision(image_data):
             "category": "Expérience/Service",
             "icon": "📍",
             "suggestedRating": 4,
-            "suggestedReview": "Lieu intéressant détecté par R8it. Partagez votre expérience !",
-            "quickSuggestions": ["expérience unique", "à découvrir", "intéressant", "recommandé"],
+            "suggestedReview": "",
+            "positiveSuggestions": [],
+            "negativeSuggestions": [],
             "confidence": 0.5,
             "error": str(e)
         }
@@ -179,4 +185,6 @@ def health_check():
         'service': 'R8it Image Analysis API',
         'version': '1.0.0'
     })
+
+
 
