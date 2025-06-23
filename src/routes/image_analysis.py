@@ -46,6 +46,19 @@ def analyze_image_with_gpt4_vision(image_data):
         - Pour les lieux : donne le nom précis si visible
         - Pour les arnaques : détecte les signes suspects (fautes, urgence, liens douteux)
         
+        STYLE DES SUGGESTIONS :
+        Les suggestions doivent être dans un style décontracté, comme sur TikTok ou Instagram :
+        - Au lieu de "cuisine raffinée" → "trop bon"
+        - Au lieu de "service excellent" → "au top"
+        - Au lieu de "décevant" → "bof"
+        - Au lieu de "prix élevé" → "cher"
+        - Au lieu de "ambiance agréable" → "sympa"
+        - Au lieu de "qualité médiocre" → "pas terrible"
+        
+        EXEMPLES DE SUGGESTIONS STYLE DÉCONTRACTÉ :
+        Positives : "délicieux", "au top", "trop bon", "parfait", "génial", "sympa", "stylé", "canon"
+        Négatives : "bof", "nul", "cher", "pas terrible", "décevant", "moyen", "pas fou", "galère"
+        
         Réponds UNIQUEMENT avec un objet JSON valide :
         {
             "businessName": "NOM EXACT du lieu/produit/service détecté",
@@ -55,26 +68,19 @@ def analyze_image_with_gpt4_vision(image_data):
             "icon": "Emoji le plus approprié",
             "suggestedRating": 4,
             "suggestedReview": "",
-            "positiveSuggestions": ["suggestion positive 1", "suggestion positive 2"],
-            "negativeSuggestions": ["suggestion négative 1", "suggestion négative 2"],
+            "positiveSuggestions": ["suggestion positive 1", "suggestion positive 2", "suggestion positive 3"],
+            "negativeSuggestions": ["suggestion négative 1", "suggestion négative 2", "suggestion négative 3"],
             "confidence": 0.95
         }
         
-        EXEMPLES DE BONNES RÉPONSES :
-        - Huile d'olive Terra Delyssa → "Terra Delyssa", "Huile d'olive bio", "🫒"
-        - Restaurant avec enseigne → "Le Petit Bistrot", "Restaurant français", "🍽️"
-        - Affiche de cinéma → "Cinéma Grand Rex", "Salle de cinéma", "🎬"
-        - SMS suspect → "Arnaque SMS détectée", "Tentative de fraude", "⚠️"
-        
         RÈGLES IMPORTANTES :
+        - TOUJOURS fournir EXACTEMENT 3 suggestions positives et 3 suggestions négatives
+        - Utilise un langage décontracté et moderne (style réseaux sociaux)
         - Si tu vois du texte, utilise-le pour identifier précisément
-        - Les suggestions positives et négatives doivent être des mots-clés courts et pertinents.
-        - Le champ suggestedReview doit être vide par défaut.
-        - La note doit refléter l'apparence/qualité visible (1-5).
-        - Pour les arnaques : note=1, avis d'alerte.
-        - Si l'image est positive (ex: plat étoilé), priorise les suggestions positives.
-        - Si l'image est négative (ex: colis endommagé), priorise les suggestions négatives.
-        - Si l'image est neutre, propose un équilibre de suggestions positives et négatives.
+        - Les suggestions doivent être des mots-clés courts (1-2 mots max)
+        - Le champ suggestedReview doit être vide par défaut
+        - La note doit refléter l'apparence/qualité visible (1-5)
+        - Pour les arnaques : note=1, avis d'alerte
         """
         
         response = client.chat.completions.create(
@@ -117,9 +123,20 @@ def analyze_image_with_gpt4_vision(image_data):
         result.setdefault('icon', '📍')
         result.setdefault('suggestedRating', 4)
         result.setdefault('suggestedReview', '') # Champ vide par défaut
-        result.setdefault('positiveSuggestions', [])
-        result.setdefault('negativeSuggestions', [])
+        result.setdefault('positiveSuggestions', ["sympa", "correct", "pas mal"])
+        result.setdefault('negativeSuggestions', ["bof", "moyen", "cher"])
         result.setdefault('confidence', 0.8)
+        
+        # S'assurer qu'il y a exactement 3 suggestions de chaque type
+        if len(result['positiveSuggestions']) < 3:
+            result['positiveSuggestions'].extend(["sympa", "correct", "pas mal"][:3-len(result['positiveSuggestions'])])
+        elif len(result['positiveSuggestions']) > 3:
+            result['positiveSuggestions'] = result['positiveSuggestions'][:3]
+            
+        if len(result['negativeSuggestions']) < 3:
+            result['negativeSuggestions'].extend(["bof", "moyen", "cher"][:3-len(result['negativeSuggestions'])])
+        elif len(result['negativeSuggestions']) > 3:
+            result['negativeSuggestions'] = result['negativeSuggestions'][:3]
         
         return result
         
@@ -134,8 +151,8 @@ def analyze_image_with_gpt4_vision(image_data):
             "icon": "📍",
             "suggestedRating": 4,
             "suggestedReview": "",
-            "positiveSuggestions": [],
-            "negativeSuggestions": [],
+            "positiveSuggestions": ["sympa", "correct", "pas mal"],
+            "negativeSuggestions": ["bof", "moyen", "cher"],
             "confidence": 0.5,
             "error": str(e)
         }
