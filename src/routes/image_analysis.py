@@ -70,11 +70,38 @@ def analyze_image_with_gpt4_vision(image_data):
             "suggestedReview": "",
             "positiveSuggestions": ["suggestion positive 1", "suggestion positive 2", "suggestion positive 3"],
             "negativeSuggestions": ["suggestion négative 1", "suggestion négative 2", "suggestion négative 3"],
+            "suggestedVendors": ["vendeur 1", "vendeur 2", "vendeur 3"],
             "confidence": 0.95
         }
         
+        DÉTECTION DES VENDEURS :
+        Analyse l'image pour suggérer 3 vendeurs/lieux d'achat probables :
+        
+        POUR LES PRODUITS ALIMENTAIRES :
+        - Grandes surfaces : "Leclerc", "Carrefour", "Auchan", "Intermarché"
+        - Spécialisés : "Monoprix", "Franprix", "Casino"
+        - Bio/Premium : "Biocoop", "Naturalia", "La Vie Claire"
+        - En ligne : "Amazon", "Courses U", "Houra"
+        
+        POUR LES PRODUITS MANUFACTURÉS :
+        - En ligne : "Amazon", "Cdiscount", "Fnac", "Darty"
+        - Occasion : "Le Bon Coin", "Vinted", "Facebook Marketplace"
+        - Spécialisés selon le produit : "Decathlon", "Ikea", "Leroy Merlin"
+        
+        POUR LES SERVICES/LIEUX :
+        - Restaurants : "Deliveroo", "Uber Eats", "Sur place"
+        - Cinémas : "Sur place", "Pathé", "UGC"
+        - Voyages : "Booking.com", "SNCF Connect", "Sur place"
+        
+        RÈGLES POUR LES VENDEURS :
+        - Priorise les vendeurs les plus probables selon le contexte
+        - Si tu vois un logo/ticket de caisse, utilise le vendeur exact
+        - Sinon, suggère 3 vendeurs logiques pour ce type de produit/service
+        - Mélange grandes surfaces, spécialisés et en ligne quand pertinent
+        
         RÈGLES IMPORTANTES :
         - TOUJOURS fournir EXACTEMENT 3 suggestions positives et 3 suggestions négatives
+        - TOUJOURS fournir EXACTEMENT 3 vendeurs suggérés
         - Utilise un langage décontracté et moderne (style réseaux sociaux)
         - Si tu vois du texte, utilise-le pour identifier précisément
         - Les suggestions doivent être des mots-clés courts (1-2 mots max)
@@ -125,6 +152,7 @@ def analyze_image_with_gpt4_vision(image_data):
         result.setdefault('suggestedReview', '') # Champ vide par défaut
         result.setdefault('positiveSuggestions', ["sympa", "correct", "pas mal"])
         result.setdefault('negativeSuggestions', ["bof", "moyen", "cher"])
+        result.setdefault('suggestedVendors', ["Amazon", "Leclerc", "Le Bon Coin"])
         result.setdefault('confidence', 0.8)
         
         # S'assurer qu'il y a exactement 3 suggestions de chaque type
@@ -137,6 +165,12 @@ def analyze_image_with_gpt4_vision(image_data):
             result['negativeSuggestions'].extend(["bof", "moyen", "cher"][:3-len(result['negativeSuggestions'])])
         elif len(result['negativeSuggestions']) > 3:
             result['negativeSuggestions'] = result['negativeSuggestions'][:3]
+            
+        # S'assurer qu'il y a exactement 3 vendeurs suggérés
+        if len(result['suggestedVendors']) < 3:
+            result['suggestedVendors'].extend(["Amazon", "Leclerc", "Le Bon Coin"][:3-len(result['suggestedVendors'])])
+        elif len(result['suggestedVendors']) > 3:
+            result['suggestedVendors'] = result['suggestedVendors'][:3]
         
         return result
         
@@ -153,6 +187,7 @@ def analyze_image_with_gpt4_vision(image_data):
             "suggestedReview": "",
             "positiveSuggestions": ["sympa", "correct", "pas mal"],
             "negativeSuggestions": ["bof", "moyen", "cher"],
+            "suggestedVendors": ["Amazon", "Leclerc", "Le Bon Coin"],
             "confidence": 0.5,
             "error": str(e)
         }
